@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "865128041118",
+    "firebase_url": "https://nfcl-71204.firebaseio.com",
+    "project_id": "nfcl-71204",
+    "storage_bucket": "nfcl-71204.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:865128041118:android:d320dcdcb45ae599",
+        "android_client_info": {
+          "package_name": "com.nfcl"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "865128041118-upts6o9vhhng44b4ktoaf36d12627q5u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtrYAEfYsb0BmeQSrofiTc4e_KiB3tTO0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

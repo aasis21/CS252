@@ -28,6 +28,7 @@ export class CustomerPage {
   private failed: boolean = false;
 
   ionViewDidEnter() {
+    this.statusBar.overlaysWebView(false);
     const loader = this.loadingCtrl.create({
       content: "Please wait...",
     });
@@ -53,7 +54,7 @@ export class CustomerPage {
         });
         alert.present();
       }
-    }, 5000);
+    }, 10000);
 
     this.displayData(loader);
     console.log('ionViewDidEnter DriverPage');
@@ -64,7 +65,7 @@ export class CustomerPage {
     this.statusBar.backgroundColorByHexString('#636b80');
   }
 
-  ionViewWillleave() {
+  ionViewWillLeave() {
     this.statusBar.overlaysWebView(true);
     this.statusBar.styleBlackTranslucent();
   }
@@ -119,6 +120,7 @@ export class CustomerPage {
         console.log(resp.coords.latitude, resp.coords.longitude);
 
         this.headers.append('Access-Control-Allow-Origin' , '*');
+        this.headers.append('Access-Control-Allow-Headers' , '*');
         this.headers.append('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT');
         this.headers.append('Accept','application/json');
         this.headers.append('content-type','application/json');

@@ -34,6 +34,7 @@ export class DriverPage {
   private onDestroy$ = new Subject<void>();
 
   ionViewDidEnter() {
+    this.statusBar.overlaysWebView(false);
     this.storage.get('driverdetails').then((val) => {
       if (val === null) {
         this.storage.set('driverdetails', 'exists');
@@ -86,16 +87,32 @@ export class DriverPage {
     this.statusBar.backgroundColorByHexString('#636b80');
   }
 
-  ionViewWillleave() {
+  ionViewWillLeave() {
     this.statusBar.overlaysWebView(true);
     this.statusBar.styleBlackTranslucent();
+    this.onDestroy$.next();
+
+    let logger = (data) => {
+      console.log('Server data clear successful', data);
+    }
+
+    let json = {
+      name: "",
+      phone: "",
+      latitude: 0,
+      longitude: 0,
+      registration: this.globalvars.registrationId,
+      remove: true
+    }
+
+    this.sendDetails(json, logger, false);
   }
 
   sendDetails(post_json, sub_func, use_geo: boolean) {
     let failure: boolean = true;
     let failed: boolean = false;
 
-    let sendFunc = function (latitude, longitude) {
+    let sendFunc = (latitude, longitude) => {
       this.storage.get('drivercontacts').then((val) => {
         post_json.name = val.name;
         post_json.phone = val.phone;
@@ -103,6 +120,7 @@ export class DriverPage {
         post_json.longitude = longitude;
 
         this.headers.append('Access-Control-Allow-Origin' , '*');
+        this.headers.append('Access-Control-Allow-Headers' , '*');
         this.headers.append('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT');
         this.headers.append('Accept','application/json');
         this.headers.append('content-type','application/json');
@@ -135,17 +153,11 @@ export class DriverPage {
         this.showPopup({
           title: 'Could not connect',
           message: 'Check your internet connection',
-          buttons: [{
-            text: 'OK',
-            handler: data => {
-              this.navCtrl.popToRoot();
-            }
-          }],
-          cssClass: 'alertCustomCss',
-          enableBackdropDismiss: false
+          buttons: ['OK'],
+          cssClass: 'alertCustomCss'
         });
       }
-    }, 5000);
+    }, 10000);
 
     if ((this.network.type === "none") && (!failed)) {
       console.log('Connection error');
@@ -153,12 +165,7 @@ export class DriverPage {
       this.showPopup({
         title: 'Could not connect',
         message: 'Check your internet connection',
-        buttons: [{
-          text: 'OK',
-          handler: data => {
-            this.navCtrl.popToRoot();
-          }
-        }],
+        buttons: ['OK'],
         cssClass: 'alertCustomCss',
         enableBackdropDismiss: false
       });
@@ -187,7 +194,7 @@ export class DriverPage {
   }
 
   deleteDetails() {
-    let cleanDetails = function (data) {
+    let cleanDetails = (data) => {
       this.storage.set('driverdetails', null);
       this.storage.set('drivercontacts', null);
       this.onDestroy$.next();
@@ -208,7 +215,7 @@ export class DriverPage {
 
     let json = {
       name: "",
-      phone: 0,
+      phone: "",
       latitude: 0,
       longitude: 0,
       registration: this.globalvars.registrationId,
@@ -216,6 +223,23 @@ export class DriverPage {
     }
 
     this.sendDetails(json, cleanDetails, false);
+  }
+
+  updateLocation() {
+    let logger = (data) => {
+      console.log('Location update successful', data);
+    }
+
+    let json = {
+      name: "",
+      phone: "",
+      latitude: 0,
+      longitude: 0,
+      registration: this.globalvars.registrationId,
+      remove: false
+    }
+
+    this.sendDetails(json, logger, true);
   }
 
   showPopup(popup) {
@@ -226,23 +250,6 @@ export class DriverPage {
     }
     this.popup = this.alertCtrl.create(popup);
     this.popup.present();
-  }
-
-  updateLocation() {
-    let logger = function (data) {
-      console.log('Location update successful', data);
-    }
-
-    let json = {
-      name: "",
-      phone: 0,
-      latitude: 0,
-      longitude: 0,
-      registration: this.globalvars.registrationId,
-      remove: false
-    }
-
-    this.sendDetails(json, logger, true);
   }
 
   private notifVisible: boolean = false;
@@ -265,7 +272,7 @@ export class DriverPage {
       });
     }
     else {
-      this.storage.set('drivercontacts', {"name": data['name'], "phone": Number(data['phone'])});
+      this.storage.set('drivercontacts', {"name": data['name'], "phone": data['phone']});
       this.updateLocation();
       Observable.interval(1000 * 60 * 20).takeUntil(this.onDestroy$).subscribe(x => {
         this.updateLocation();

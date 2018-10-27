@@ -15,14 +15,13 @@
   ```
   export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https\://services.gradle.org/distributions/gradle-4.7-all.zip"
   ```
-6. Copy the file `google-services.json` to `./platforms/android/app/`.
-7. After installing the platform run `ionic cordova build android` to generate the apk file. The genereated apk file is present inside platforms/android/app/build/outputs/apk/debug.
+6. After installing the platform run `ionic cordova build android` to generate the apk file. The genereated apk file is present inside platforms/android/app/build/outputs/apk/debug.
 
 If you face any **enviroment changed** errors, please run ```npm rebuild node-sass --force```.
 
 ## Building Release Apk
 For building a release app, follow the instructions on: [Ionic Deploying](https://ionicframework.com/docs/intro/deploying/).
-**NOTE**: You do not have to generate a private key; `my-release-key.jks` is the required key, with password `cs252nfcl`.
+**NOTE**: You do not have to generate a private key; `my-release-key.jks` in the parent directory is the required key, with password `cs252nfcl`.
 
 ## Testing Customers
 For testing driver details for customers:

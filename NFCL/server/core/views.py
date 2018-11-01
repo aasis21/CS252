@@ -7,6 +7,8 @@ import json, math
 from pyproj import Proj, transform
 from django.conf import settings 
 
+def index(request):
+    return render(request, 'index.html', {})
 
 def send_notification(message_title, message_body, registration_ids):
     try:
@@ -19,17 +21,10 @@ def send_notification(message_title, message_body, registration_ids):
         print("Error while sending Notification")
 
 def get_distance(a,b):
-    return str(math.sqrt( (a[1]-b[1])^2 + (a[0]-b[0])^2 ))
+    print(a,b)
+    return str( abs(a[1]-b[1]) + abs(a[0]-b[0]) )
 
-def nearbyDrivers(request):
-    data = json.loads(request.body.decode("utf-8"))
-    
-    try:
-        latitude = data['latitude']
-        longitude = data['longitude']
-    except:
-         return HttpResponse("ERROR", status=403)
-
+def get_nearby_drivers(latitude, longitude):
     x, y = transform(Proj(init='epsg:4326'), Proj(init='epsg:3857'), float(longitude), float(latitude))
     # output (meters east of 0, meters north of 0):
     #shortcuts for Web Mercator (EPSG 3857) and WGS 84 longitude and latitude (EPSG 4326). 
@@ -88,13 +83,48 @@ def nearbyDrivers(request):
             'x_cordinate' : str(x_cordinate),
             'y_cordinate' : str(y_cordinate)
     }
+    return data
 
-
-    return JsonResponse(data)
 
 
 @require_http_methods(["POST"])
+def nearbyDriversWeb(request):
+    print(request.POST, request.body)
+    data = request.POST 
+    try:
+        latitude = data['latitude']
+        longitude = data['longitude']
+    except:
+         return HttpResponse("ERROR", status=403)
+    
+    print(latitude, longitude)
+    
+    data = get_nearby_drivers(latitude, longitude)
+    return JsonResponse(data)
+    
+
+
+@require_http_methods(["POST","OPTIONS"])
+def nearbyDrivers(request):
+    if(request.method == "OPTIONS"):
+        return HttpResponse(200)
+  
+    data = json.loads(request.body.decode("utf-8"))
+    
+    try:
+        latitude = data['latitude']
+        longitude = data['longitude']
+    except:
+         return HttpResponse("ERROR", status=403)
+
+    data = get_nearby_drivers(latitude, longitude)
+    return JsonResponse(data)
+
+
+@require_http_methods(["POST","OPTIONS"])
 def updateDriverDetail(request):
+    if(request.method == "OPTIONS"):
+        return HttpResponse(200)
 
     data = json.loads(request.body.decode("utf-8"))
     
@@ -105,50 +135,60 @@ def updateDriverDetail(request):
         latitude = data['latitude']
         longitude = data['longitude']
 
+        x, y = transform(Proj(init='epsg:4326'), Proj(init='epsg:3857'), float(longitude), float(latitude))
+        # output (meters east of 0, meters north of 0):
+        #shortcuts for Web Mercator (EPSG 3857) and WGS 84 longitude and latitude (EPSG 4326). 
+        x = int(x)
+        y = int(y)
+
+        grid_size = 10000 # 10km * 10km
+        grid = ( int(x/grid_size), int(y/grid_size))
+        grid_id = str(hash(grid))
+
+        data_update = {
+            'mob_id' : mob_id,
+            'name' : name,
+            'mobile_no' : mobile_no,
+            'latitude' : latitude,
+            'longitude' : longitude,
+            'x_cordinate' : x,
+            'y_cordinate' : y,
+            'grid' : grid_id
+        }
+
+        try:
+            driver = Driver.objects.get(mob_id = mob_id)
+            Driver.objects.filter(mob_id = mob_id).update(**data_update)
+            return JsonResponse({}) 
+            #return HttpResponse(status = 202)
+        except ObjectDoesNotExist:
+            driver = Driver(**data_update)
+            driver.save()
+            return JsonResponse({})
+            #return HttpResponse(status = 201)
+
+
     except:
-         return HttpResponse("data fields are missing", status=400)
-
-    x, y = transform(Proj(init='epsg:4326'), Proj(init='epsg:3857'), float(longitude), float(latitude))
-    # output (meters east of 0, meters north of 0):
-    #shortcuts for Web Mercator (EPSG 3857) and WGS 84 longitude and latitude (EPSG 4326). 
-    x = int(x)
-    y = int(y)
-
-    grid_size = 10000 # 10km * 10km
-    grid = ( int(x/grid_size), int(y/grid_size))
-    grid_id = str(hash(grid))
-
-    data_update = {
-        'mob_id' : mob_id,
-        'name' : name,
-        'mobile_no' : mobile_no,
-        'latitude' : latitude,
-        'longitude' : longitude,
-        'x_cordinate' : x,
-        'y_cordinate' : y,
-        'grid' : grid_id
-    }
-
-    try:
-        driver = Driver.objects.get(mob_id = mob_id)
-        Driver.objects.filter(mob_id = mob_id).update(**data_update)
-        return HttpResponse(status = 202)
-    except ObjectDoesNotExist:
-        driver = Driver(**data_update)
-        driver.save()
-        return HttpResponse(status = 201)
-
+        return HttpResponse("data fields are missing", status=400)
+          
+    
     
 
-
+@require_http_methods(["POST","OPTIONS"])
 def deleteDriverDetail(request):
+    if(request.method == "OPTIONS"):
+        return JsonResponse({})
+        #return HttpResponse(200)
     mob_id = json.loads(request.body.decode("utf-8")).get("mob_id")
     if(mob_id == None):
-        return HttpResponse("No Mob_id", status=400)
+        return JsonResponse({})
+        #return HttpResponse("No Mob_id", status=400)
     else:
         status = Driver.objects.filter(mob_id=mob_id).delete()
         if(status[0] > 0 ):
-            return HttpResponse(status = 202)
+            return JsonResponse({})
+            #return HttpResponse(status = 202)
         else:
-            return HttpResponse("DoesNotExist", status=409)
+            return JsonResponse({})
+            #return HttpResponse("DoesNotExist", status=409)
 

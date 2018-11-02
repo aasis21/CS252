@@ -38,7 +38,7 @@
     function make_post_request(position){
         
         $.post(
-            "http://127.0.0.1:8000/api/nearbyDriversWeb",
+            "https://nfcl.pythonanywhere.com/api/nearbyDriversWeb",
             {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
@@ -49,6 +49,9 @@
                 console.log(drivers.length)
                 var i=0;
                 var text = "";
+                if(drivers.length == 0){
+                    text += "No Driver available in this region"
+                }
                 for (i = 0; i < drivers.length; i++) { 
                     text += "Name : " + drivers[i].name + " || Mobile No. : " + drivers[i].mobile_no + " || Distance : " + drivers[i].distance + " m<br>";
                 }
